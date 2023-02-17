@@ -1,3 +1,4 @@
+// Constant values (as of now)
 var size = 5;
 var start_x = 10;
 var start_y = 10;
@@ -6,13 +7,19 @@ var no_trees = 120;
 var board;
 var next_board;
 
-var grow_chance = 0.05;
-var lightning_chance = 0.000001;
-var burning_chance = 0.55;
+var grow_chance;
+var lightning_chance;
+var burning_chance;
 
-var generation = 1;
+var generation;
+// This one needs to be set by other functions
+var start_generation = false;
+
+// "Semi-const" value, can be changed on each iteration
+var max_generation;
 
 const GREEN = 1, BURNING = 2, EMPTY = 0;
+
 
 class Tree {
   constructor(x, y, state) {
@@ -39,10 +46,16 @@ class Tree {
   }
 }
 
-function setup() {
-  frameRate(30);
+// Initializes all non-const values
+// Useful for reseting the current stage of the CA
+function init_values() {
+  generation = 1;
 
-  createCanvas(start_x + no_trees * size, start_y + no_trees * size);
+  grow_chance = document.getElementById("grow_chance").value;
+  lightning_chance = document.getElementById("lightning_chance").value;
+  burning_chance = document.getElementById("burning_chance").value;
+  max_generation = document.getElementById("max_generation").value;
+  
 
   board = new Array(no_trees);
   next_board = new Array(no_trees);
@@ -56,22 +69,15 @@ function setup() {
       board[i][j] = new Tree(i * size, j * size, GREEN);
     }
   }
-
-  // Start point
-  // board[no_trees / 2][no_trees / 2].state = BURNING;
 }
 
-function draw() {
-  // console.log("Currently at generation " + generation++);
+function setup() {
+  frameRate(30);
 
-  // Draw the current board
-  for (var i = 0; i < no_trees; i++) {
-    for (var j = 0; j < no_trees; j++) {
-      board[i][j].draw();
-    }
-  }
+  createCanvas(start_x + no_trees * size, start_y + no_trees * size).parent("sketch-container");
+}
 
-  // Calculate the next board
+function update_board() {
   for (var i = 0; i < no_trees; i++) {
     for (var j = 0; j < no_trees; j++) {
       // In case the next board does not update (for example, a tree does not burn)
@@ -128,21 +134,58 @@ function draw() {
       board[i][j].state = next_board[i][j];
     }
   }
+}
 
-  // Info data
+function draw_board() {
+  for (var i = 0; i < no_trees; i++) {
+    for (var j = 0; j < no_trees; j++) {
+      board[i][j].draw();
+    }
+  }
+}
+
+function draw() {
   
+  if (start_generation) {
+    if (generation >= max_generation) {
+      noLoop();
+      console.log("Finished!");
+    }
+    generation++;
+    console.log("On generation " + generation + " / " + max_generation);
+    
+    // Calculate the next board
+    update_board();
+    
+    // Draw the next board
+    draw_board();
+  }
 }
 
 function mouseClicked() {
-  // console.log("Pressed mouse at (" + mouseX + ", " + mouseY + ")");
   var x = Math.trunc(mouseX / size);
   var y = Math.trunc(mouseY / size);
 
-  // console.log(x + ", " + y)
   try {
     board[x][y].state = BURNING;
   }
   catch (exc) {
     console.warn("Clicked outside of canvas!");
   }
+}
+
+// Callback function for the 'Start!' button
+function start() {
+  // Stop any current looping
+  // noLoop();
+
+  init_values();
+  
+  // Draw the initial state of the board
+  draw_board();
+
+  // This needs to be at the very end so that all values are set
+  start_generation = true;
+
+  // loop();
 }
