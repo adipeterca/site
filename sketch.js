@@ -7,16 +7,20 @@ var no_trees = 120;
 var board;
 var next_board;
 
-var grow_chance;
-var lightning_chance;
-var burning_chance;
+var grow_chance, grow_chance_element;
+var lightning_chance, lightning_chance_element;
+var burning_chance, burning_chance_element;
+var speed_element;
 
 var generation;
-// This one needs to be set by other functions
-var start_generation = false;
 
-// "Semi-const" value, can be changed on each iteration
-var max_generation;
+// Possible states for the application
+const STOP = 0;            // Describes the initial state
+const CAN_DRAW = 1;        // If lighting is 0, a mouse click on the board is requiered to start
+const DRAW = 2;             // The draw() function can be called
+
+// The current state of the application
+var current_state = STOP;
 
 const GREEN = 1, BURNING = 2, EMPTY = 0;
 
@@ -51,11 +55,9 @@ class Tree {
 function init_values() {
   generation = 1;
 
-  grow_chance = document.getElementById("grow_chance").value;
-  lightning_chance = document.getElementById("lightning_chance").value;
-  burning_chance = document.getElementById("burning_chance").value;
-  max_generation = document.getElementById("max_generation").value;
-  
+  grow_chance = grow_chance_element.value;
+  lightning_chance = lightning_chance_element.value;
+  burning_chance = burning_chance_element.value;
 
   board = new Array(no_trees);
   next_board = new Array(no_trees);
@@ -72,9 +74,33 @@ function init_values() {
 }
 
 function setup() {
-  frameRate(30);
-
+  
   createCanvas(start_x + no_trees * size, start_y + no_trees * size).parent("sketch-container");
+  
+  // Add event listeners for each input field
+  grow_chance_element = document.getElementById("grow_chance");
+  lightning_chance_element = document.getElementById("lightning_chance");
+  burning_chance_element = document.getElementById("burning_chance");
+  speed_element = document.getElementById("speed");
+  
+  frameRate(speed_element.value);
+
+  grow_chance_element.addEventListener("input", () => {
+    grow_chance = grow_chance_element.value;
+  });
+  
+  lightning_chance_element.addEventListener("input", () => {
+    lightning_chance = lightning_chance_element.value;
+  });
+  
+  burning_chance_element.addEventListener("input", () => {
+    burning_chance = burning_chance_element.value;
+  });
+
+  speed_element.addEventListener("input", () => {
+    frameRate(parseInt(speed_element.value));
+  });
+
 }
 
 function update_board() {
@@ -146,13 +172,9 @@ function draw_board() {
 
 function draw() {
   
-  if (start_generation) {
-    if (generation >= max_generation) {
-      noLoop();
-      console.log("Finished!");
-    }
+  if (current_state == DRAW) {
     generation++;
-    console.log("On generation " + generation + " / " + max_generation);
+    // console.log("On generation " + generation);
     
     // Calculate the next board
     update_board();
@@ -168,6 +190,9 @@ function mouseClicked() {
 
   try {
     board[x][y].state = BURNING;
+    if (current_state == CAN_DRAW) {
+      current_state = DRAW;
+    }
   }
   catch (exc) {
     console.warn("Clicked outside of canvas!");
@@ -176,8 +201,6 @@ function mouseClicked() {
 
 // Callback function for the 'Start!' button
 function start() {
-  // Stop any current looping
-  // noLoop();
 
   init_values();
   
@@ -185,7 +208,10 @@ function start() {
   draw_board();
 
   // This needs to be at the very end so that all values are set
-  start_generation = true;
-
-  // loop();
+  if (lightning_chance == 0) {
+    current_state = CAN_DRAW;
+  }
+  else {
+    current_state = DRAW;
+  }
 }
