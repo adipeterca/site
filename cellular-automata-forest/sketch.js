@@ -72,6 +72,7 @@ function init_values() {
       board[i][j] = new Tree(i * size, j * size, GREEN);
     }
   }
+  summary_element.textContent = "Generation: 0";
 }
 
 function setup() {
@@ -86,7 +87,6 @@ function setup() {
   summary_element = document.getElementById("summary");
   
   frameRate(parseInt(speed_element.value));
-  summary_element.textContent = "Generation: 0";
 
   grow_chance_element.addEventListener("input", () => {
     grow_chance = grow_chance_element.value;
