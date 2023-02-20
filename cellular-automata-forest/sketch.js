@@ -11,6 +11,7 @@ var grow_chance, grow_chance_element;
 var lightning_chance, lightning_chance_element;
 var burning_chance, burning_chance_element;
 var speed_element;
+var summary_element;
 
 var generation;
 
@@ -53,7 +54,7 @@ class Tree {
 // Initializes all non-const values
 // Useful for reseting the current stage of the CA
 function init_values() {
-  generation = 1;
+  generation = 0;
 
   grow_chance = grow_chance_element.value;
   lightning_chance = lightning_chance_element.value;
@@ -82,8 +83,10 @@ function setup() {
   lightning_chance_element = document.getElementById("lightning_chance");
   burning_chance_element = document.getElementById("burning_chance");
   speed_element = document.getElementById("speed");
+  summary_element = document.getElementById("summary");
   
-  frameRate(speed_element.value);
+  frameRate(parseInt(speed_element.value));
+  summary_element.textContent = "Generation: 0";
 
   grow_chance_element.addEventListener("input", () => {
     grow_chance = grow_chance_element.value;
@@ -174,7 +177,7 @@ function draw() {
   
   if (current_state == DRAW) {
     generation++;
-    // console.log("On generation " + generation);
+    summary_element.textContent = "Generation: " + generation;
     
     // Calculate the next board
     update_board();
